@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.swing.JPanel;
@@ -22,9 +23,8 @@ public class Map extends JPanel implements ActionListener{
 	private final int ITEM_SIZE = 10;
 	private final int SPEED = 30;
 
-	private Set<int[]> bulletOnField;
-	private Set<int[]> removeBullet;
-	
+	private Set<int[]> bulletSet;
+	private Set<int[]> removeSet;
 	
 	private int[] p1, p2;
 
@@ -48,8 +48,8 @@ public class Map extends JPanel implements ActionListener{
 	private void startGame() {
 		addKeyListener(gunFightAdapter);
 		
-		bulletOnField = new HashSet<>();
-		removeBullet = new HashSet<>();
+		bulletSet = new HashSet<>();
+		removeSet = new HashSet<>();
 		
 		p1 = new int[] {0, MAP_HEIGHT/2, 1};
 		p2 = new int[] {MAP_WIDTH-1, MAP_HEIGHT/2, 3};
@@ -60,47 +60,69 @@ public class Map extends JPanel implements ActionListener{
 	private void createBullet(int[] p) {
 		switch (p[2]) {
 		case 1:
-			bulletOnField.add(new int[] {p[0]+1, p[1], p[2]});
+			bulletSet.add(new int[] {p[0]+1, p[1], p[2]});
 			break;
 		case 2:
-			bulletOnField.add(new int[] {p[0], p[1]+1, p[2]});
+			bulletSet.add(new int[] {p[0], p[1]+1, p[2]});
 			break;
 		case 3:
-			bulletOnField.add(new int[] {p[0]-1, p[1], p[2]});
+			bulletSet.add(new int[] {p[0]-1, p[1], p[2]});
 			break;
 		case 4:
-			bulletOnField.add(new int[] {p[0], p[1]-1, p[2]});
+			bulletSet.add(new int[] {p[0], p[1]-1, p[2]});
 			break;
 		}
 	}
 
 	private void bulletMove() {
-		for(int[] i : bulletOnField) {
-			switch (i[2]) {
+		
+		Iterator<int[]> iter = bulletSet.iterator();
+		
+		while(iter.hasNext()) {
+			
+			int[] bullet = iter.next();
+			
+			switch (bullet[2]) {
 			case 1:
-				i[0]++;
+				bullet[0]++;
 				break;
 			case 2:
-				i[1]++;
+				bullet[1]++;
 				break;
 			case 3:
-				i[0]--;
+				bullet[0]--;
 				break;
 			case 4:
-				i[1]--;
+				bullet[1]--;
 				break;
 			}
-			if(checkOut(i))
-				removeBullet.add(i);
+			if(checkOut(bullet)||checkHit(bullet))
+				removeSet.add(bullet);
 		}
+		
 		removeBullet();
 	}
-
-	private void removeBullet() {
-		for(int[] i : removeBullet) {
-			bulletOnField.remove(i);
+	
+	private boolean checkHit(int[] bullet) {
+		Iterator<int[]> iter = bulletSet.iterator();
+		
+		while(iter.hasNext()) {
+			
+			int[] bullet2 = iter.next();
+			
+			if(bullet!=bullet2&&(bullet[0]==bullet2[0]&&bullet[1]==bullet2[1])) {
+				removeSet.add(bullet2);
+				return true;
+			}
 		}
-		removeBullet.clear();
+		
+		return false;
+	}
+	
+	private void removeBullet() {
+		for(int[] bullet : removeSet) {
+			bulletSet.remove(bullet);
+		}
 	}
 	
 	private void movePlayer(int[] p, int direction) {
@@ -157,8 +179,8 @@ public class Map extends JPanel implements ActionListener{
 		g.fillRect(p2[0]*ITEM_SIZE, p2[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
 
 		g.setColor(Color.yellow);
-		for(int[] i : bulletOnField) {
-			g.fillRect(i[0]*ITEM_SIZE, i[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
+		for(int[] bullet : bulletSet) {
+			g.fillRect(bullet[0]*ITEM_SIZE, bullet[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
 		}
 		
 	}
