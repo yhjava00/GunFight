@@ -1,8 +1,11 @@
 package game;
 
+import java.awt.Button;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Label;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -28,10 +31,22 @@ public class Map extends JPanel implements ActionListener{
 	
 	private int[] p1, p2;
 
+	private Button restart = new Button("restart");
+	
 	private Timer timer;
 	
 	private final KeyAdapter gunFightAdapter;
 	
+	private void setLabelAndButton() {
+		restart.setBounds(MAP_WIDTH*ITEM_SIZE/2-37, 130, 75, 30);
+		restart.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				remove(restart);
+				startGame();
+			}
+		});
+	}
 	public Map() {
 
 		gunFightAdapter = new GunFightAdapter();
@@ -40,13 +55,14 @@ public class Map extends JPanel implements ActionListener{
         setFocusable(true);
         setPreferredSize(new Dimension(MAP_WIDTH * ITEM_SIZE, MAP_HEIGHT * ITEM_SIZE));
 
-        timer = new Timer(SPEED, this);
+        addKeyListener(gunFightAdapter);
+        
+        setLabelAndButton();
         
         startGame();
 	}
 
 	private void startGame() {
-		addKeyListener(gunFightAdapter);
 		
 		bulletSet = new HashSet<>();
 		removeSet = new HashSet<>();
@@ -54,7 +70,13 @@ public class Map extends JPanel implements ActionListener{
 		p1 = new int[] {0, MAP_HEIGHT/2, 1};
 		p2 = new int[] {MAP_WIDTH-1, MAP_HEIGHT/2, 3};
 		
+		timer = new Timer(SPEED, this);
 		timer.start();
+	}
+	
+	private void endGame() {
+		timer.stop();
+		add(restart);
 	}
 
 	private void createBullet(int[] p) {
@@ -98,20 +120,30 @@ public class Map extends JPanel implements ActionListener{
 			}
 			if(checkOut(bullet)||checkHit(bullet))
 				removeSet.add(bullet);
+			
+			if(checkHit(p1)) {
+				System.out.println("p1 dead");
+				endGame();
+			}
+			if(checkHit(p2)) {
+				System.out.println("p2 dead");
+				endGame();
+			}
+			
 		}
 		
 		removeBullet();
 	}
 	
-	private boolean checkHit(int[] bullet) {
+	private boolean checkHit(int[] item) {
 		Iterator<int[]> iter = bulletSet.iterator();
 		
 		while(iter.hasNext()) {
 			
-			int[] bullet2 = iter.next();
+			int[] bullet = iter.next();
 			
-			if(bullet!=bullet2&&(bullet[0]==bullet2[0]&&bullet[1]==bullet2[1])) {
-				removeSet.add(bullet2);
+			if(item!=bullet&&(item[0]==bullet[0]&&item[1]==bullet[1])) {
+				removeSet.add(bullet);
 				return true;
 			}
 		}
