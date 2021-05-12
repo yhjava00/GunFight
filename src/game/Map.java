@@ -26,12 +26,9 @@ public class Map extends JPanel implements ActionListener{
 	private final int ITEM_SIZE = 10;
 	private final int SPEED = 30;
 
-	private Set<int[]> bulletSet;
-	private Set<int[]> removeSet;
-	
-	private int[] p1, p2;
-
 	private Button restart = new Button("restart");
+	
+	private GameController gameController;
 	
 	private Timer timer;
 	
@@ -43,7 +40,6 @@ public class Map extends JPanel implements ActionListener{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				remove(restart);
-				startGame();
 			}
 		});
 	}
@@ -59,159 +55,37 @@ public class Map extends JPanel implements ActionListener{
         
         setLabelAndButton();
         
-        startGame();
-	}
-
-	private void startGame() {
-		
-		bulletSet = new HashSet<>();
-		removeSet = new HashSet<>();
-		
-		p1 = new int[] {0, MAP_HEIGHT/2, 1};
-		p2 = new int[] {MAP_WIDTH-1, MAP_HEIGHT/2, 3};
-		
-		timer = new Timer(SPEED, this);
+        gameController = new GameController();
+        
+        gameController.gameStart();
+        
+        timer = new Timer(SPEED, this);
 		timer.start();
 	}
-	
+
 	private void endGame() {
 		timer.stop();
 		add(restart);
 	}
 
-	private void createBullet(int[] p) {
-		switch (p[2]) {
-		case 1:
-			bulletSet.add(new int[] {p[0]+1, p[1], p[2]});
-			break;
-		case 2:
-			bulletSet.add(new int[] {p[0], p[1]+1, p[2]});
-			break;
-		case 3:
-			bulletSet.add(new int[] {p[0]-1, p[1], p[2]});
-			break;
-		case 4:
-			bulletSet.add(new int[] {p[0], p[1]-1, p[2]});
-			break;
-		}
-	}
-
-	private void bulletMove() {
-		
-		Iterator<int[]> iter = bulletSet.iterator();
-		
-		while(iter.hasNext()) {
-			
-			int[] bullet = iter.next();
-			
-			switch (bullet[2]) {
-			case 1:
-				bullet[0]++;
-				break;
-			case 2:
-				bullet[1]++;
-				break;
-			case 3:
-				bullet[0]--;
-				break;
-			case 4:
-				bullet[1]--;
-				break;
-			}
-			if(checkOut(bullet)||checkHit(bullet))
-				removeSet.add(bullet);
-			
-			if(checkHit(p1)) {
-				System.out.println("p1 dead");
-				endGame();
-			}
-			if(checkHit(p2)) {
-				System.out.println("p2 dead");
-				endGame();
-			}
-			
-		}
-		
-		removeBullet();
-	}
 	
-	private boolean checkHit(int[] item) {
-		Iterator<int[]> iter = bulletSet.iterator();
-		
-		while(iter.hasNext()) {
-			
-			int[] bullet = iter.next();
-			
-			if(item!=bullet&&(item[0]==bullet[0]&&item[1]==bullet[1])) {
-				removeSet.add(bullet);
-				return true;
-			}
-		}
-		
-		return false;
-	}
 	
-	private void removeBullet() {
-		for(int[] bullet : removeSet) {
-			bulletSet.remove(bullet);
-		}
-	}
-	
-	private void movePlayer(int[] p, int direction) {
-		
-		p[2] = direction;
-		
-		switch (p[2]) {
-		case 1:
-			p[0]++;
-			break;
-		case 2:
-			p[1]++;
-			break;
-		case 3:
-			p[0]--;
-			break;
-		case 4:
-			p[1]--;
-			break;
-		}
-		
-		if(checkOut(p)||(p1[0]==p2[0]&&p1[1]==p2[1])) {
-			switch (p[2]) {
-			case 1:
-				p[0]--;
-				break;
-			case 2:
-				p[1]--;
-				break;
-			case 3:
-				p[0]++;
-				break;
-			case 4:
-				p[1]++;
-				break;
-			}
-		}
-	}
-
-	private boolean checkOut(int[] item) {
-		if((item[0]<0||item[0]>=MAP_WIDTH)||(item[1]<0||item[1]>=MAP_HEIGHT))
-			return true;
-		return false;
-	}
 	
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		
 		g.setColor(Color.red);
-		g.fillRect(p1[0]*ITEM_SIZE, p1[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
-
+		g.fillRect(gameController.p1[0]*ITEM_SIZE, gameController.p1[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
+		
 		g.setColor(Color.blue);
-		g.fillRect(p2[0]*ITEM_SIZE, p2[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
-
+		Set<int[]> enemySet = gameController.getEnemySet();
+		for(int[] enemy : enemySet) {
+			g.fillRect(enemy[0]*ITEM_SIZE, enemy[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
+		}
+		
 		g.setColor(Color.yellow);
-		for(int[] bullet : bulletSet) {
+		for(int[] bullet : gameController.bulletSet) {
 			g.fillRect(bullet[0]*ITEM_SIZE, bullet[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
 		}
 		
@@ -219,7 +93,6 @@ public class Map extends JPanel implements ActionListener{
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		bulletMove();
 		repaint();
 	}
 
@@ -230,35 +103,20 @@ public class Map extends JPanel implements ActionListener{
 			int key = e.getKeyCode();
 			
 			switch(key) {
-            case KeyEvent.VK_D:
-            	movePlayer(p1, 1);
-            	break;
-            case KeyEvent.VK_S:
-            	movePlayer(p1, 2);
-            	break;
-            case KeyEvent.VK_A:
-            	movePlayer(p1, 3);
-            	break;
-            case KeyEvent.VK_W:
-            	movePlayer(p1, 4);
-            	break;
-            case KeyEvent.VK_SPACE:
-            	createBullet(p1);
-            	break;
             case KeyEvent.VK_RIGHT:
-            	movePlayer(p2, 1);
+            	gameController.movePlayer(1);
             	break;
             case KeyEvent.VK_DOWN:
-            	movePlayer(p2, 2);
+            	gameController.movePlayer(2);
             	break;
             case KeyEvent.VK_LEFT:
-            	movePlayer(p2, 3);
+            	gameController.movePlayer(3);
             	break;
             case KeyEvent.VK_UP:
-            	movePlayer(p2, 4);
+            	gameController.movePlayer(4);
             	break;
-            case KeyEvent.VK_NUMPAD0:
-            	createBullet(p2);
+            case KeyEvent.VK_SPACE:
+            	gameController.createBullet(gameController.p1);
             	break;
             }
 		} 	
