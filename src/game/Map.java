@@ -104,16 +104,16 @@ public class Map extends JPanel implements ActionListener{
 			
 			switch(key) {
             case KeyEvent.VK_RIGHT:
-            	gameController.movePlayer(1);
+            	gameController.itemMove(gameController.p1, 1);
             	break;
             case KeyEvent.VK_DOWN:
-            	gameController.movePlayer(2);
+            	gameController.itemMove(gameController.p1, 2);
             	break;
             case KeyEvent.VK_LEFT:
-            	gameController.movePlayer(3);
+            	gameController.itemMove(gameController.p1, 3);
             	break;
             case KeyEvent.VK_UP:
-            	gameController.movePlayer(4);
+            	gameController.itemMove(gameController.p1, 4);
             	break;
             case KeyEvent.VK_SPACE:
             	gameController.createBullet(gameController.p1);

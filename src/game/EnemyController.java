@@ -32,6 +32,17 @@ public class EnemyController {
 			n--;
 			
 		}
+	}
+	
+	public void enemyAction() {
+		
+		Random r = new Random();
+		
+		for(int[] enemy : enemySet) {
+			if(r.nextInt(100)==0) {
+				gameController.itemMove(enemy, r.nextInt(4)+1);
+			}
+		}
 		
 	}
 

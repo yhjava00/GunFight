@@ -20,6 +20,7 @@ public class GameController {
 	EnemyController enemyController;
 	
 	Thread bulletMoveThread;
+	Thread enemyThread;
 	
 	public boolean inGame;
 	
@@ -40,7 +41,10 @@ public class GameController {
 		enemyController.deployEnemy(10);
 		
 		bulletMoveThread = new bulletMoveThread();
+		enemyThread = new EnemyThread();
+		
 		bulletMoveThread.start();
+		enemyThread.start();
 		
 		inGame = true;
 	}
@@ -52,16 +56,16 @@ public class GameController {
 	public void createBullet(int[] p) {
 		switch (p[2]) {
 		case 1:
-			bulletSet.add(new int[] {p[0]+1, p[1], p[2]});
+			bulletSet.add(new int[] {p[0], p[1], p[2]});
 			break;
 		case 2:
-			bulletSet.add(new int[] {p[0], p[1]+1, p[2]});
+			bulletSet.add(new int[] {p[0], p[1], p[2]});
 			break;
 		case 3:
-			bulletSet.add(new int[] {p[0]-1, p[1], p[2]});
+			bulletSet.add(new int[] {p[0], p[1], p[2]});
 			break;
 		case 4:
-			bulletSet.add(new int[] {p[0], p[1]-1, p[2]});
+			bulletSet.add(new int[] {p[0], p[1], p[2]});
 			break;
 		}
 	}
@@ -91,6 +95,16 @@ public class GameController {
 			if(checkOut(bullet)||checkHit(bullet))
 				removeSet.add(bullet);
 			
+			Iterator<int[]> enemyIter = getEnemySet().iterator();
+			
+			while(enemyIter.hasNext()) {
+				int[] enemy = enemyIter.next();
+				
+				if(checkHit(enemy)) {
+					enemyIter.remove();
+					removeSet.add(bullet);
+				}
+			}
 		}
 		
 		removeBullet();
@@ -118,42 +132,55 @@ public class GameController {
 		}
 	}
 	
-	public void movePlayer(int direction) {
+	public void itemMove(int[] item, int direction) {
 		
-		p1[2] = direction;
+		item[2] = direction;
 		
-		switch (p1[2]) {
+		switch (item[2]) {
 		case 1:
-			p1[0]++;
+			item[0]++;
 			break;
 		case 2:
-			p1[1]++;
+			item[1]++;
 			break;
 		case 3:
-			p1[0]--;
+			item[0]--;
 			break;
 		case 4:
-			p1[1]--;
+			item[1]--;
 			break;
 		}
 		
-		if(!checkOut(p1)) 
+		if(!checkOut(item)&&!bump(item)) 
 			return;
 		
-		switch (p1[2]) {
+		switch (item[2]) {
 		case 1:
-			p1[0]--;
+			item[0]--;
 			break;
 		case 2:
-			p1[1]--;
+			item[1]--;
 			break;
 		case 3:
-			p1[0]++;
+			item[0]++;
 			break;
 		case 4:
-			p1[1]++;
+			item[1]++;
 			break;
 		}
+	}
+	
+	public boolean bump(int[] item) {
+		
+		if(item!=p1&&(p1[0]==item[0]&&p1[1]==item[1])) 
+			return true;
+		
+		for(int[] enemy : enemyController.enemySet) {
+			if(item!=enemy&&(enemy[0]==item[0]&&enemy[1]==item[1])) 
+				return true;
+		}
+		
+		return false;
 	}
 
 	public boolean checkOut(int[] item) {
@@ -170,6 +197,18 @@ public class GameController {
 					sleep(BULLET_SPEED);
 				} catch (Exception e) {}
 				bulletMove();
+			}
+		}
+	}
+	
+	class EnemyThread extends Thread {
+		@Override
+		public void run() {
+			while(inGame) {
+				try {
+					sleep(100);
+				} catch (Exception e) {}
+				enemyController.enemyAction();
 			}
 		}
 	}
