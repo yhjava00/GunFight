@@ -76,9 +76,9 @@ public class Map extends JPanel implements ActionListener{
 		super.paintComponent(g);
 		
 		g.setColor(Color.red);
-		g.fillRect(gameController.p1[0]*ITEM_SIZE, gameController.p1[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
+		g.fillRect(gameController.p[0]*ITEM_SIZE, gameController.p[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
 		
-		g.setColor(Color.blue);
+		g.setColor(Color.green);
 		Set<int[]> enemySet = gameController.getEnemySet();
 		for(int[] enemy : enemySet) {
 			g.fillRect(enemy[0]*ITEM_SIZE, enemy[1]*ITEM_SIZE, ITEM_SIZE, ITEM_SIZE);
@@ -104,21 +104,45 @@ public class Map extends JPanel implements ActionListener{
 			
 			switch(key) {
             case KeyEvent.VK_RIGHT:
-            	gameController.itemMove(gameController.p1, 1);
+            	gameController.itemMove(gameController.p, 1);
+            	gameController.move = "stop";
             	break;
             case KeyEvent.VK_DOWN:
-            	gameController.itemMove(gameController.p1, 2);
+            	gameController.itemMove(gameController.p, 2);
+            	gameController.move = "stop";
             	break;
             case KeyEvent.VK_LEFT:
-            	gameController.itemMove(gameController.p1, 3);
+            	gameController.itemMove(gameController.p, 3);
+            	gameController.move = "stop";
             	break;
             case KeyEvent.VK_UP:
-            	gameController.itemMove(gameController.p1, 4);
+            	gameController.itemMove(gameController.p, 4);
+            	gameController.move = "stop";
             	break;
             case KeyEvent.VK_SPACE:
-            	gameController.createBullet(gameController.p1);
+            	gameController.createBullet(gameController.p);
             	break;
             }
-		} 	
+		} 
+		
+		@Override
+		public void keyPressed(KeyEvent e) {
+			int key = e.getKeyCode();
+			
+			switch(key) {
+            case KeyEvent.VK_RIGHT:
+            	gameController.move = "right";
+            	break;
+            case KeyEvent.VK_DOWN:
+            	gameController.move = "down";
+            	break;
+            case KeyEvent.VK_LEFT:
+            	gameController.move = "left";
+            	break;
+            case KeyEvent.VK_UP:
+            	gameController.move = "up";
+            	break;
+            }
+		}
     }
 }

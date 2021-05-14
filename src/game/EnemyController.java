@@ -39,9 +39,14 @@ public class EnemyController {
 		Random r = new Random();
 		
 		for(int[] enemy : enemySet) {
-			if(r.nextInt(100)==0) {
+			if(r.nextInt(10)==0) {
 				gameController.itemMove(enemy, r.nextInt(4)+1);
 			}
+			
+			if(r.nextInt(10)==0) {
+				gameController.createBullet(enemy);
+			}
+			
 		}
 		
 	}

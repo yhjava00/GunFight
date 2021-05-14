@@ -10,17 +10,16 @@ public class GameController {
 	private final int MAP_WIDTH = 50;
 	private final int ITEM_SIZE = 10;
 	
-	private final int BULLET_SPEED = 19;
-	
 	public Set<int[]> bulletSet;
 	public Set<int[]> removeSet;
 
-	public int[] p1;
+	public int[] p;
+	
+	public String move;
 	
 	EnemyController enemyController;
 	
-	Thread bulletMoveThread;
-	Thread enemyThread;
+	Thread gameRun;
 	
 	public boolean inGame;
 	
@@ -36,17 +35,16 @@ public class GameController {
 		bulletSet = new HashSet<>();
 		removeSet = new HashSet<>();
 				
-		p1 = new int[] {MAP_WIDTH/2, MAP_HEIGHT-2, 4};
+		p = new int[] {MAP_WIDTH/2, MAP_HEIGHT-2, 4};
+		
+		move = "stop";
 		
 		enemyController.deployEnemy(10);
 		
-		bulletMoveThread = new bulletMoveThread();
-		enemyThread = new EnemyThread();
-		
-		bulletMoveThread.start();
-		enemyThread.start();
-		
 		inGame = true;
+		
+		gameRun = new gameRun();
+		gameRun.start();
 	}
 	
 	public Set<int[]> getEnemySet() {
@@ -56,16 +54,16 @@ public class GameController {
 	public void createBullet(int[] p) {
 		switch (p[2]) {
 		case 1:
-			bulletSet.add(new int[] {p[0], p[1], p[2]});
+			bulletSet.add(new int[] {p[0]+1, p[1], p[2]});
 			break;
 		case 2:
-			bulletSet.add(new int[] {p[0], p[1], p[2]});
+			bulletSet.add(new int[] {p[0], p[1]+1, p[2]});
 			break;
 		case 3:
-			bulletSet.add(new int[] {p[0], p[1], p[2]});
+			bulletSet.add(new int[] {p[0]-1, p[1], p[2]});
 			break;
 		case 4:
-			bulletSet.add(new int[] {p[0], p[1], p[2]});
+			bulletSet.add(new int[] {p[0], p[1]-1, p[2]});
 			break;
 		}
 	}
@@ -95,6 +93,11 @@ public class GameController {
 			if(checkOut(bullet)||checkHit(bullet))
 				removeSet.add(bullet);
 			
+			if(checkHit(p)) {
+				System.out.println("end");
+				inGame = false;
+			}
+			
 			Iterator<int[]> enemyIter = getEnemySet().iterator();
 			
 			while(enemyIter.hasNext()) {
@@ -102,7 +105,6 @@ public class GameController {
 				
 				if(checkHit(enemy)) {
 					enemyIter.remove();
-					removeSet.add(bullet);
 				}
 			}
 		}
@@ -170,9 +172,28 @@ public class GameController {
 		}
 	}
 	
+	public void playerMove() {
+		
+		switch (move) {
+		case "right":
+			itemMove(p, 1);
+			break;
+		case "down":
+			itemMove(p, 2);
+			break;
+		case "left":
+			itemMove(p, 3);
+			break;
+		case "up":
+			itemMove(p, 4);
+			break;
+		}
+		
+	}
+	
 	public boolean bump(int[] item) {
 		
-		if(item!=p1&&(p1[0]==item[0]&&p1[1]==item[1])) 
+		if(item!=p&&(p[0]==item[0]&&p[1]==item[1])) 
 			return true;
 		
 		for(int[] enemy : enemyController.enemySet) {
@@ -189,29 +210,38 @@ public class GameController {
 		return false;
 	}
 	
-	class bulletMoveThread extends Thread {
+	class gameRun extends Thread {
+		
+		int playerMoveStack = 0;
+		int bulletStack = 0;
+		int enemyStack = 0;
+		
 		@Override
 		public void run() {
 			while(inGame) {
+				
 				try {
-					sleep(BULLET_SPEED);
+					sleep(1);
 				} catch (Exception e) {}
-				bulletMove();
+				
+				if(playerMoveStack++>100) {
+					playerMove();
+					playerMoveStack = 0;
+				}
+				
+				if(bulletStack++>10) {
+					bulletMove();
+					bulletStack = 0;
+				}
+				
+				if(enemyStack++>100) {
+					enemyController.enemyAction();
+					enemyStack = 0;
+				}
 			}
 		}
 	}
 	
-	class EnemyThread extends Thread {
-		@Override
-		public void run() {
-			while(inGame) {
-				try {
-					sleep(100);
-				} catch (Exception e) {}
-				enemyController.enemyAction();
-			}
-		}
-	}
 }
 
 
